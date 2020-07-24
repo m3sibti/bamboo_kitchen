@@ -1,0 +1,33 @@
+{% extends 'bk_app/main.html' %}
+{% load static %}
+{% block content %}
+    <br/>
+    <div class="row">
+        <div class="col">
+            <div class="card" style="margin: 10px">
+                <div class="card-header text-center">
+                    <h4>Orders</h4>
+                    <a class="btn btn-lg btn-success btn-block" href="{% url 'add_order' %}">Create New Order</a>
+                </div>
+                <div class="card-body" style="height: 75vh; overflow:auto;">
+                    <table class="table table-md">
+                        <tr>
+                            <th>Order No</th>
+                            <th>Bill</th>
+                            <th>Date/Time</th>
+                            <th>Details</th>
+                        </tr>
+                        {% for order in orders %}
+                            <tr>
+                                <td>Order# {{ order.no }}</td>
+                                <td>{{ order.bill }}</td>
+                                <td>{{ order.date_created }}</td>
+                                <td><a class="btn btn-sm btn-info" href="{% url 'view_order' order.id %}">View</a></td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

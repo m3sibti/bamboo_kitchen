@@ -1,0 +1,36 @@
+{% extends 'bk_app/main.html' %}
+{% load static %}
+{% block content %}
+    <br>
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4>DEALS</h4>
+                    <a class="btn btn-md btn-warning btn-block" href="{% url 'add_deal' %}">Create New Deal</a>
+                </div>
+                <div class="card-body">
+                    <table class="table table-md">
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Deal Name</th>
+                            <th>Total Charges</th>
+                            <th>Details</th>
+                        </tr>
+                        {% for deal in deals %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ deal.name }}</td>
+                                <td>{{ deal.price }}</td>
+                                <td>
+                                    <a class="btn btn-sm btn-info" href="{% url 'view_deal' deal.id %}">View Details</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

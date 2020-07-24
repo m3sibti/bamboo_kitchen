@@ -1,0 +1,14 @@
+{% extends 'bk_app/main.html' %}
+{% load static %}
+{% block content %}
+    <br/>
+    <div style="margin: 10px">
+        <form method="POST" action="{% url 'add_stock_item' %}">
+            {% csrf_token %}
+            {{ stock_item_form.as_p }}
+            <br/>
+            <a class="btn btn-md btn-warning" href="{% url 'stock' %}">Cancel</a>
+            <button type="submit" class="btn btn-md btn-success">Save</button>
+        </form>
+    </div>
+{% endblock %}

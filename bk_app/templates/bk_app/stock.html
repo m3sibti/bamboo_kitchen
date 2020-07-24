@@ -1,0 +1,58 @@
+{% extends 'bk_app/main.html' %}
+{% load static %}
+{% block content %}
+    <br/>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card" style="margin: 10px">
+                <div class="card-header text-center">
+                    <h2>Stock</h2>
+                    <a class="btn btn-md btn-info btn-block" href="{% url 'add_stock' %}">New Entry</a>
+                </div>
+                <div class="card-body" style="height: 70vh; overflow: auto">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Price</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                        {% for stock_entry in stocks %}
+                            <tr>
+                                <td>{{ stock_entry.item }}</td>
+                                <td>{{ stock_entry.quantity }}</td>
+                                <td>{{ stock_entry.unit }}</td>
+                                <td>{{ stock_entry.price }}</td>
+                                <td>{{ stock_entry.date_created }}</td>
+                                {% if stock_entry.status == 'Add' %}
+                                    <td><a style="background-color: lightgreen; padding: 2px">Added</a></td>
+                                {% else %}
+                                    <td><a style="background-color: #ee8a8a; padding: 2px">Removed</a></td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card" style="margin: 10px">
+                <div class="card-header text-center">
+                    <h2>Stock Items</h2>
+                    <a class="btn btn-sm btn-warning btn-block" href="{% url 'add_stock_item' %}">Add New Item</a>
+                </div>
+                <div class="card-body text-center" style="height: 70vh; overflow: auto">
+                    <table class="table table-sm">
+                        {% for item in stock_items %}
+                            <tr>
+                                <td>{{ item }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'bk_app/main.html' %}
+{% load static %}
+{% block content %}
+    <br/>
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card text-center">
+                <div class="card-header">
+                    <h4>{{ deal.name }}</h4>
+                </div>
+                <div class="card-body">
+                    <a class="btn btn-sm btn-block btn-dark" href="{% url 'add_deal_item' deal.id %}">
+                        Change Deal
+                    </a>
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                        </tr>
+                        {% for item in deal_items %}
+                            <tr>
+                                <td>{{ item.item.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.units }}</td>
+                            </tr>
+                        {% endfor %}
+
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <h4>Price: <span style="color: green">{{ deal.price }}</span></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'bk_app/main.html' %}
+{% load static %}
+{% block content %}
+    <br/>
+    <div class="container justify-content-center">
+        <form method="POST" class="text-center">
+            {% csrf_token %}
+            <table class="table table-sm">
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Unit</th>
+                    <th></th>
+                    <th>Remove</th>
+                </tr>
+                {{ formset.management_form }}
+                {% for form in formset %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        {% for field in form %}
+                            <td>{{ field }}</td>
+                        {% endfor %}
+
+                    </tr>
+                {% endfor %}
+            </table>
+            <a class="btn btn-md btn-warning" href="{% url 'view_deal' d_id %}">Cancel</a>
+            <button type="submit" class="btn btn-md btn-success">Make Changes</button>
+        </form>
+    </div>
+{% endblock %}

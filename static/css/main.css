@@ -1,0 +1,29 @@
+#logo {
+
+}
+
+body {
+    background-color: #ebeff5;
+}
+
+#total-orders {
+    background-color: #4cb4c7;
+}
+
+#orders-delivered {
+    background-color: #7abecc;
+}
+
+#orders-pending {
+    background-color: #7CD1C0;
+}
+
+.my-custom-scrollbar {
+    position: relative;
+    height: 200px;
+    overflow: auto;
+}
+
+.table-wrapper-scroll-y {
+    display: block;
+}

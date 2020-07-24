@@ -1,0 +1,61 @@
+{% extends 'bk_app/main.html' %}
+{% load static %}
+{% load mathfilters %}
+{% block content %}
+    <br/>
+    <div class="row">
+        <div class="col-md-8" style="margin: 10px; max-height: 75vh; overflow: auto">
+            <div class="card">
+                <div class="card-header">
+                    <h3>{{ stock_item }}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Operation</th>
+                            <th>Date</th>
+                        </tr>
+                        {% for item in stock_list %}
+                            <tr>
+                                <td>{{ item.quantity }} {{ item.unit }}</td>
+                                <td>{{ item.price }}</td>
+                                <td>{{ item.status }}</td>
+                                <td>{{ item.date_created }}</td>
+                            </tr>
+                        {% endfor %}
+
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3" style="margin: 10px">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Summary</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><b>Total Added</b></td>
+                            <td>{{ total_added }} {{ unit }}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Total Taken</b></td>
+                            <td>{{ total_taken }} {{ unit }}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Price Spent</b></td>
+                            <td>Rs.{{ price_spent }}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Remaining</b></td>
+                            <td>{{ total_added|sub:total_taken }} {{ unit }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

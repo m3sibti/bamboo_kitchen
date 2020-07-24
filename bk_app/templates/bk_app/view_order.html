@@ -1,0 +1,60 @@
+{% extends 'bk_app/main.html' %}
+{% load static %}
+{% load mathfilters %}
+{% block content %}
+    <br/>
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card text-center">
+                <div class="card-header">
+                    <h4>Order# {{ order.no }}</h4>
+                    <h5> {{ order.status }}</h5>
+                </div>
+                <div class="card-body">
+                    {#                    <a class="btn btn-sm btn-block btn-dark" href="{% url 'add_deal_item' deal.id %}">#}
+                    {#                        Change Deal#}
+                    {#                    </a>#}
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                        </tr>
+                        {% for item in order_items %}
+                            <tr>
+                                <td>{{ item.item.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.item.price }}</td>
+                            </tr>
+                        {% endfor %}
+                        {% for m_item in menu_items %}
+                            <tr>
+                                <td>{{ m_item.item.name }}</td>
+                                <td>{{ m_item.quantity }}/{{ m_item.item.unit }}</td>
+                                <td>{{ m_item.item.price|mul:m_item.quantity }}</td>
+                            </tr>
+                        {% endfor %}
+                        <tr>
+                            <td><b>Total</b></td>
+                            <td></td>
+                            <td><b>{{ order.charges }}</b></td>
+                        </tr>
+                    </table>
+                    <hr/>
+                </div>
+                <h5>Discount: <span
+                        style="color: red">{{ order.discount }}%</span>
+                </h5>
+                <div class="card-footer">
+                    {#                    <h4>Price: <span style="color: green">{{ order.bill }}</span></h4>#}
+                    <h4>Price: <span style="color: green">{{ order.bill }}</span></h4>
+                </div>
+            </div>
+            <br/>
+            <a class="btn btn-lg btn-block" style="background-color: forestgreen; color: whitesmoke"
+               href="{% url 'orders' %}">View all
+                orders</a>
+        </div>
+
+    </div>
+{% endblock %}
