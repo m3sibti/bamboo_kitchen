@@ -51,6 +51,12 @@
                 </div>
             </div>
             <br/>
+        <form action="" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-lg btn-block" style="background-color: #af0a06; color: whitesmoke">
+                Print Receipt</button>
+        </form>
+        <br/>
             <a class="btn btn-lg btn-block" style="background-color: forestgreen; color: whitesmoke"
                href="{% url 'orders' %}">View all
                 orders</a>

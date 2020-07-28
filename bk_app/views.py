@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, authenticate
 from django.forms import modelformset_factory, inlineformset_factory
 from django.utils import timezone
+import win32print, win32ui, win32con
 
 from .forms import *
 from .models import *
@@ -230,11 +231,63 @@ def add_order(request):
     return render(request, 'bk_app/add_order.html', context)
 
 
+def print_it(data_to_print):
+    # U must install pywin32 and import modules:
+    # X from the left margin, Y from top margin
+    # both in pixels
+    X = 20
+    Y = 50
+    # Separate lines from Your string
+    # for example:input_string and create
+    # new string for example: multi_line_string
+    multi_line_string = data_to_print.split('\n')
+    # print(multi_line_string)
+    hDC = win32ui.CreateDC()
+    # Set default printer from Windows:
+    hDC.CreatePrinterDC(win32print.GetDefaultPrinter())
+    hDC.StartDoc("the_name_will_appear_on_printer_spool")
+    hDC.StartPage()
+    # hDC.TextOut(X, Y, multi_line_string)
+    for line in multi_line_string:
+        hDC.TextOut(X, Y, line)
+        Y += 40
+    hDC.EndPage()
+    hDC.EndDoc()
+    # I like Python
+
+
 @login_required(login_url='login')
 def view_order(request, pk):
     order = Order.objects.get(id=pk)
     order_items = order.orderitem_set.all()
     menu_items = order.ordermenuitem_set.all()
+    if request.method == 'POST':
+        str_to_print = ''
+        order_no = order.no
+        time_date = str(order.date_created).split(".")[0]
+        order_status = order.status
+        order_charges = order.charges
+        order_bill = order.bill
+        order_discount = order.discount
+
+        heading = f'Order# {order_no} --- {order_status}\nTime: {time_date}\n'
+        str_to_print += heading
+        body = '\n \nItem | Quantity | Price\n'
+        body_m = ''
+        for o_item in order_items:
+            body += f'{o_item.item} | {o_item.quantity} | {o_item.item.price*o_item.quantity}\n'
+        str_to_print += body
+        for m_item in menu_items:
+            body_m += f'{m_item.item} | {m_item.quantity} | {m_item.item.price*m_item.quantity}\n'
+        str_to_print += body_m
+        str_to_print += f'\n \n Total Price | {order_charges}'
+        if order_discount > 0:
+            str_to_print += f'\n \n Discount Offered | {order_discount}%'
+            str_to_print += f'\n \n Final Charges | {order_bill}'
+        str_to_print += '\n \n \nPowered by Subtain Malik\n\n'
+        # print(str_to_print)
+        # for xix in range(2):
+        print_it(str_to_print)
     context = {'order': order,
                'order_items': order_items,
                'menu_items': menu_items, }
