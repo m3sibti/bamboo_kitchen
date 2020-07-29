@@ -9,6 +9,7 @@
                 <div class="card-header">
                     <h4>Order# {{ order.no }}</h4>
                     <h5> {{ order.status }}</h5>
+                    <p> ({{ order.order_taker_name}})</p>
                 </div>
                 <div class="card-body">
                     {#                    <a class="btn btn-sm btn-block btn-dark" href="{% url 'add_deal_item' deal.id %}">#}

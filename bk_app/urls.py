@@ -21,4 +21,7 @@ urlpatterns = [
 
     path('view_deal/<str:pk>/', views.view_deal, name='view_deal'),
     path('view_order/<str:pk>/', views.view_order, name='view_order'),
+
+    path('print_stock/<str:pk>/', views.print_stock, name='print_stock'),
+    path('print_order/', views.print_orders, name='print_orders'),
 ]

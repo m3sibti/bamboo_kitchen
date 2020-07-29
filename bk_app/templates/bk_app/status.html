@@ -39,5 +39,23 @@
             </div>
 
         </div>
+        <div class="col-md-4 mx-auto">
+            <div class="card text-white mb-3" id="orders-delivered">
+                <div class="card-header text-center">
+                    <h5 class="card-title">Orders Report</h5>
+                </div>
+                <div class="card-body">
+                    <p>Select a date to print order summary of that day.</p>
+                    <form action="{% url 'print_orders' %}" method="POST" class="text-center">
+                        {% csrf_token %}
+                        <label>
+                            <input type="date" name="form_date">
+                        </label>
+                        <button class="btn btn-sm btn-danger" type="submit">Print</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
     </div>
 </div>

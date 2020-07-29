@@ -3,7 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, authenticate
 from django.forms import modelformset_factory, inlineformset_factory
 from django.utils import timezone
+import datetime
 import win32print, win32ui, win32con
+from PIL import Image, ImageWin
+import os
+from django.conf import settings
 
 from .forms import *
 from .models import *
@@ -11,7 +15,12 @@ from .models import *
 
 @login_required(login_url='login')
 def home(request):
+    # total_orders = Order.objects.filter(date_created__day=datetime.datetime.now().day).count()
     total_orders = Order.objects.filter(date_created__day=timezone.now().day).count()
+    # oall = Order.objects.all()
+    # for i in oall:
+    #     print(i.date_created)
+    # print(timezone.now().day)
     stock_items = StockItem.objects.all()
     context = {'total_orders': total_orders,
                'stock_items': stock_items}
@@ -48,6 +57,81 @@ def stock(request):
     context = {'stocks': stocks,
                'stock_items': stock_items}
     return render(request, 'bk_app/stock.html', context)
+
+
+@login_required(login_url='login')
+def print_stock(request, pk):
+    stock_item = StockItem.objects.get(id=pk)
+    stock_list = Stock.objects.filter(item_id=pk)
+    total_added_items = Stock.objects.filter(item_id=pk, status='Add')
+    total_removed_items = Stock.objects.filter(item_id=pk, status='Remove')
+    total_added = 0.0
+    for add_item in total_added_items:
+        total_added += add_item.quantity
+    total_removed = 0.0
+    for removed_item in total_removed_items:
+        total_removed += removed_item.quantity
+    price_spent = 0.0
+    unit = 'KG'
+    for st_item in stock_list:
+        price_spent += st_item.price
+        unit = st_item.unit
+    ##################################################################
+    # PRINT SUMMARY
+    hDC = win32ui.CreateDC()
+    hDC.CreatePrinterDC(win32print.GetDefaultPrinter())
+    hDC.StartDoc("bamboo_receipt")
+    hDC.StartPage()
+    # LOGO
+    ################################################################################################
+    # Constants for GetDeviceCaps
+    # HORZRES / VERTRES = printable area
+    HORZRES = 6  # 8
+    VERTRES = 8  # 10
+    # LOGPIXELS = dots per inch
+    LOGPIXELSX = 88
+    LOGPIXELSY = 90
+    # PHYSICALWIDTH/HEIGHT = total area
+    PHYSICALWIDTH = 30
+    PHYSICALHEIGHT = 30
+    # PHYSICALOFFSETX/Y = left / top margin
+    PHYSICALOFFSETX = 200
+    PHYSICALOFFSETY = 10
+    file_name = os.path.join(settings.BASE_DIR, 'bk_logo_white.png')
+    printable_area = hDC.GetDeviceCaps(HORZRES), hDC.GetDeviceCaps(VERTRES)
+    printer_size = hDC.GetDeviceCaps(PHYSICALWIDTH), hDC.GetDeviceCaps(PHYSICALHEIGHT)
+    printer_margins = hDC.GetDeviceCaps(PHYSICALOFFSETX), hDC.GetDeviceCaps(PHYSICALOFFSETY)
+    bmp = Image.open(file_name)
+    if bmp.size[0] > bmp.size[1]:
+        bmp = bmp.rotate(90)
+
+    ratios = [1.0 * printable_area[0] / bmp.size[0], 1.0 * printable_area[1] / bmp.size[1]]
+    scale = min(ratios)
+    dib = ImageWin.Dib(bmp)
+    scaled_width, scaled_height = [int(scale * i) for i in bmp.size]
+    x1 = int((printer_size[0] - scaled_width) / 2)
+    y1 = int((printer_size[1] - scaled_height) / 2)
+    x2 = x1 + scaled_width
+    y2 = y1 + scaled_height
+    dib.draw(hDC.GetHandleOutput(), (180, 0, 380, 160))
+    hDC.TextOut(215, 100, f'BAMBOO')
+    hDC.TextOut(215, 130, f'KITCHEN')
+    ##################################################################################################
+    # ADD SUMMARY
+    hDC.TextOut(150, 200, f'{stock_item} SUMMARY')
+    hDC.TextOut(10, 260, f'Total Added')
+    hDC.TextOut(350, 260, f'{total_added} {unit}')
+    hDC.TextOut(10, 300, f'Total Taken')
+    hDC.TextOut(350, 300, f'{total_removed} {unit}')
+    hDC.TextOut(10, 360, f'Remaining')
+    hDC.TextOut(350, 360, f'{total_added - total_removed} {unit}')
+    hDC.TextOut(10, 400, f'Price Spent')
+    hDC.TextOut(350, 400, f'RS. {price_spent}')
+    hDC.EndPage()
+    hDC.EndDoc()
+    hDC.DeleteDC()
+    ###################################################################
+    return redirect('home')
 
 
 @login_required(login_url='login')
@@ -176,6 +260,85 @@ def orders(request):
 
 
 @login_required(login_url='login')
+def print_orders(request):
+    if request.method == 'POST':
+        date_str = request.POST.get('form_date', None)
+        if date_str is None or date_str == "":
+            return redirect('home')
+        date_time_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+        current_orders = Order.objects.filter(date_created__date=date_time_obj.date())
+
+        ##################################################################
+        # PRINT SUMMARY
+        hDC = win32ui.CreateDC()
+        hDC.CreatePrinterDC(win32print.GetDefaultPrinter())
+        hDC.StartDoc("bamboo_receipt")
+        hDC.StartPage()
+        # LOGO
+        ################################################################################################
+        # Constants for GetDeviceCaps
+        # HORZRES / VERTRES = printable area
+        HORZRES = 6  # 8
+        VERTRES = 8  # 10
+        # LOGPIXELS = dots per inch
+        LOGPIXELSX = 88
+        LOGPIXELSY = 90
+        # PHYSICALWIDTH/HEIGHT = total area
+        PHYSICALWIDTH = 30
+        PHYSICALHEIGHT = 30
+        # PHYSICALOFFSETX/Y = left / top margin
+        PHYSICALOFFSETX = 200
+        PHYSICALOFFSETY = 10
+        file_name = os.path.join(settings.BASE_DIR, 'bk_logo_white.png')
+        printable_area = hDC.GetDeviceCaps(HORZRES), hDC.GetDeviceCaps(VERTRES)
+        printer_size = hDC.GetDeviceCaps(PHYSICALWIDTH), hDC.GetDeviceCaps(PHYSICALHEIGHT)
+        printer_margins = hDC.GetDeviceCaps(PHYSICALOFFSETX), hDC.GetDeviceCaps(PHYSICALOFFSETY)
+        bmp = Image.open(file_name)
+        if bmp.size[0] > bmp.size[1]:
+            bmp = bmp.rotate(90)
+
+        ratios = [1.0 * printable_area[0] / bmp.size[0], 1.0 * printable_area[1] / bmp.size[1]]
+        scale = min(ratios)
+        dib = ImageWin.Dib(bmp)
+        scaled_width, scaled_height = [int(scale * i) for i in bmp.size]
+        x1 = int((printer_size[0] - scaled_width) / 2)
+        y1 = int((printer_size[1] - scaled_height) / 2)
+        x2 = x1 + scaled_width
+        y2 = y1 + scaled_height
+        dib.draw(hDC.GetHandleOutput(), (180, 0, 380, 160))
+        hDC.TextOut(215, 100, f'BAMBOO')
+        hDC.TextOut(215, 130, f'KITCHEN')
+        ##################################################################################################
+        # ADD SUMMARY
+        hDC.TextOut(50, 200, f'ORDERS SUMMARY --- {date_str}')
+        hDC.TextOut(10, 340, 'Item')
+        hDC.TextOut(200, 340, f'Time')
+        hDC.TextOut(450, 340, 'Bill')
+        hDC.MoveTo(10, 380)
+        hDC.LineTo(550, 380)
+        y = 400
+        total_bill=0
+        for order in current_orders:
+            hDC.TextOut(10, y, f'{order}')
+            hDC.TextOut(200, y, f'{str(order.date_created.time()).split(".")[0]}')
+            hDC.TextOut(450, y, f'{order.bill}')
+            total_bill += order.bill
+            y = y+40
+        hDC.MoveTo(10, y)
+        hDC.LineTo(550, y)
+        y = y + 20
+        hDC.TextOut(10, y, f'Total Sale')
+        hDC.TextOut(450, y, f'{total_bill}')
+        # FOOTER
+        hDC.TextOut(120, y + 80, 'Powered by Subtain Malik')
+        hDC.EndPage()
+        hDC.EndDoc()
+        hDC.DeleteDC()
+        ###################################################################
+    return redirect('home')
+
+
+@login_required(login_url='login')
 def add_order(request):
     crr_user = User.objects.get(username=request.user)
     menu_items = MenuItem.objects.all()
@@ -231,38 +394,16 @@ def add_order(request):
     return render(request, 'bk_app/add_order.html', context)
 
 
-def print_it(data_to_print):
-    # U must install pywin32 and import modules:
-    # X from the left margin, Y from top margin
-    # both in pixels
-    X = 20
-    Y = 50
-    # Separate lines from Your string
-    # for example:input_string and create
-    # new string for example: multi_line_string
-    multi_line_string = data_to_print.split('\n')
-    # print(multi_line_string)
-    hDC = win32ui.CreateDC()
-    # Set default printer from Windows:
-    hDC.CreatePrinterDC(win32print.GetDefaultPrinter())
-    hDC.StartDoc("the_name_will_appear_on_printer_spool")
-    hDC.StartPage()
-    # hDC.TextOut(X, Y, multi_line_string)
-    for line in multi_line_string:
-        hDC.TextOut(X, Y, line)
-        Y += 40
-    hDC.EndPage()
-    hDC.EndDoc()
-    # I like Python
-
-
 @login_required(login_url='login')
 def view_order(request, pk):
     order = Order.objects.get(id=pk)
     order_items = order.orderitem_set.all()
     menu_items = order.ordermenuitem_set.all()
     if request.method == 'POST':
-        str_to_print = ''
+        hDC = win32ui.CreateDC()
+        hDC.CreatePrinterDC(win32print.GetDefaultPrinter())
+        hDC.StartDoc("bamboo_receipt")
+        hDC.StartPage()
         order_no = order.no
         time_date = str(order.date_created).split(".")[0]
         order_status = order.status
@@ -270,24 +411,79 @@ def view_order(request, pk):
         order_bill = order.bill
         order_discount = order.discount
 
-        heading = f'Order# {order_no} --- {order_status}\nTime: {time_date}\n'
-        str_to_print += heading
-        body = '\n \nItem | Quantity | Price\n'
-        body_m = ''
+        # LOGO
+        ################################################################################################
+        # Constants for GetDeviceCaps
+        # HORZRES / VERTRES = printable area
+        HORZRES = 6  # 8
+        VERTRES = 8  # 10
+        # LOGPIXELS = dots per inch
+        LOGPIXELSX = 88
+        LOGPIXELSY = 90
+        # PHYSICALWIDTH/HEIGHT = total area
+        PHYSICALWIDTH = 30
+        PHYSICALHEIGHT = 30
+        # PHYSICALOFFSETX/Y = left / top margin
+        PHYSICALOFFSETX = 200
+        PHYSICALOFFSETY = 10
+        file_name = os.path.join(settings.BASE_DIR, 'bk_logo_white.png')
+        printable_area = hDC.GetDeviceCaps(HORZRES), hDC.GetDeviceCaps(VERTRES)
+        printer_size = hDC.GetDeviceCaps(PHYSICALWIDTH), hDC.GetDeviceCaps(PHYSICALHEIGHT)
+        printer_margins = hDC.GetDeviceCaps(PHYSICALOFFSETX), hDC.GetDeviceCaps(PHYSICALOFFSETY)
+        bmp = Image.open(file_name)
+        if bmp.size[0] > bmp.size[1]:
+            bmp = bmp.rotate(90)
+
+        ratios = [1.0 * printable_area[0] / bmp.size[0], 1.0 * printable_area[1] / bmp.size[1]]
+        scale = min(ratios)
+        dib = ImageWin.Dib(bmp)
+        scaled_width, scaled_height = [int(scale * i) for i in bmp.size]
+        x1 = int((printer_size[0] - scaled_width) / 2)
+        y1 = int((printer_size[1] - scaled_height) / 2)
+        x2 = x1 + scaled_width
+        y2 = y1 + scaled_height
+        dib.draw(hDC.GetHandleOutput(), (180, 0, 380, 160))
+        hDC.TextOut(215, 100, f'BAMBOO')
+        hDC.TextOut(215, 130, f'KITCHEN')
+        ##################################################################################################
+
+        # HEADINGS
+        hDC.TextOut(150, 200, f'Order# {order_no} --- {order_status}')
+        hDC.TextOut(120, 240, f'\nTime: {time_date}')
+        # BODY
+        hDC.TextOut(10, 340, 'Item')
+        hDC.TextOut(320, 340, 'Quantity')
+        hDC.TextOut(470, 340, 'Price')
+        hDC.MoveTo(10, 380)
+        hDC.LineTo(550, 380)
+        y = 400
         for o_item in order_items:
-            body += f'{o_item.item} | {o_item.quantity} | {o_item.item.price*o_item.quantity}\n'
-        str_to_print += body
+            hDC.TextOut(10, y, f'{o_item.item}')
+            hDC.TextOut(320, y, f'{o_item.quantity}')
+            hDC.TextOut(470, y, f'{o_item.item.price*o_item.quantity}')
+            y = y + 40
         for m_item in menu_items:
-            body_m += f'{m_item.item} | {m_item.quantity} | {m_item.item.price*m_item.quantity}\n'
-        str_to_print += body_m
-        str_to_print += f'\n \n Total Price | {order_charges}'
+            hDC.TextOut(10, y, f'{m_item.item.name}')
+            hDC.TextOut(320, y, f'{m_item.quantity} {m_item.item.unit}')
+            hDC.TextOut(470, y, f'{m_item.item.price*m_item.quantity}')
+            y = y + 40
+        hDC.MoveTo(10, y)
+        hDC.LineTo(550, y)
+        y = y + 20
+        hDC.TextOut(10, y, f'Total Bill')
+        hDC.TextOut(460, y, f'{order_charges}')
+        y = y + 40
         if order_discount > 0:
-            str_to_print += f'\n \n Discount Offered | {order_discount}%'
-            str_to_print += f'\n \n Final Charges | {order_bill}'
-        str_to_print += '\n \n \nPowered by Subtain Malik\n\n'
-        # print(str_to_print)
-        # for xix in range(2):
-        print_it(str_to_print)
+            hDC.TextOut(10, y, f'Discount Offered')
+            hDC.TextOut(460, y, f'{order_discount}%')
+            y = y + 40
+            hDC.TextOut(10, y, f'Final Bill')
+            hDC.TextOut(460, y, f'{order_bill}')
+        # FOOTER
+        hDC.TextOut(120, y + 80, 'Powered by Subtain Malik')
+        hDC.EndPage()
+        hDC.EndDoc()
+        hDC.DeleteDC()
     context = {'order': order,
                'order_items': order_items,
                'menu_items': menu_items, }
